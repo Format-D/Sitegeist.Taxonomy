@@ -16,7 +16,7 @@ declare(strict_types=1);
 namespace Sitegeist\Taxonomy\Service;
 
 use Neos\ContentRepository\Core\ContentRepository;
-use Neos\ContentRepository\Core\Factory\ContentRepositoryId;
+use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryId;
 use Neos\ContentRepository\Core\Feature\RootNodeCreation\Command\CreateRootNodeAggregateWithNode;
 use Neos\ContentRepository\Core\NodeType\NodeTypeName;
 use Neos\ContentRepository\Core\NodeType\NodeTypeNames;
@@ -82,7 +82,7 @@ class TaxonomyService
         $subgraph = $this->crRegistry->subgraphForNode($node);
 
         $vocabularyNode = $subgraph->findClosestNode(
-            $node->nodeAggregateId,
+            $node->aggregateId,
             FindClosestNodeFilter::create(
                 nodeTypes: NodeTypeCriteria::create(
                     NodeTypeNames::fromArray([ $this->getVocabularyNodeTypeName()]),
@@ -110,7 +110,7 @@ class TaxonomyService
 
         $commandResult = $contentRepository->handle(
             CreateRootNodeAggregateWithNode::create(
-                $liveWorkspace->currentContentStreamId,
+                $liveWorkspace->workspaceName,
                 NodeAggregateId::create(),
                 $this->getRootNodeTypeName()
             )
@@ -129,7 +129,7 @@ class TaxonomyService
     {
         $root = $this->findOrCreateRoot($subgraph);
         return $subgraph->findChildNodes(
-            $root->nodeAggregateId,
+            $root->aggregateId,
             FindChildNodesFilter::create(
                 nodeTypes: NodeTypeCriteria::create(
                     NodeTypeNames::fromArray([$this->getVocabularyNodeTypeName()]),
@@ -159,7 +159,7 @@ class TaxonomyService
         }
         $taxonomy = $subgraph->findNodeByPath(
             NodePath::fromString($taxonomyPath),
-            $vocabulary->nodeAggregateId
+            $vocabulary->aggregateId
         );
         return $taxonomy;
     }
@@ -169,7 +169,7 @@ class TaxonomyService
         $subgraph = $this->crRegistry->subgraphForNode($StartNode);
 
         $vocabularySubtree = $subgraph->findSubtree(
-            $StartNode->nodeAggregateId,
+            $StartNode->aggregateId,
             FindSubtreeFilter::create(
                 nodeTypes: NodeTypeCriteria::create(
                     NodeTypeNames::fromArray([$this->getTaxonomyNodeTypeName(), $this->getVocabularyNodeTypeName()]),
@@ -203,8 +203,7 @@ class TaxonomyService
     {
         $contentRepository = $this->getContentRepository();
         $nodeAddress = NodeAddressFactory::create($contentRepository)->createFromUriString($serializedNodeAddress);
-        $subgraph = $contentRepository->getContentGraph()->getSubgraph(
-            $nodeAddress->contentStreamId,
+        $subgraph = $contentRepository->getContentGraph(WorkspaceName::forLive())->getSubgraph(
             $nodeAddress->dimensionSpacePoint,
             VisibilityConstraints::withoutRestrictions()
         );
@@ -218,15 +217,13 @@ class TaxonomyService
     public function getDefaultSubgraph(): ContentSubgraphInterface
     {
         $contentRepository = $this->getContentRepository();
-        $liveWorkspace = $this->getLiveWorkspace();
         $generalizations = $contentRepository->getVariationGraph()->getRootGeneralizations();
         $dimensionSpacePoint = reset($generalizations);
         if (!$dimensionSpacePoint) {
             throw new \Exception('default dimensionSpacePoint could not be found');
         }
-        $contentGraph = $contentRepository->getContentGraph();
+        $contentGraph = $contentRepository->getContentGraph(WorkspaceName::forLive());
         $subgraph = $contentGraph->getSubgraph(
-            $liveWorkspace->currentContentStreamId,
             $dimensionSpacePoint,
             VisibilityConstraints::withoutRestrictions()
         );
