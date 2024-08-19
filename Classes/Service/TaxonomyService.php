@@ -31,6 +31,7 @@ use Neos\ContentRepository\Core\Projection\ContentGraph\Nodes;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Subtree;
 use Neos\ContentRepository\Core\Projection\ContentGraph\VisibilityConstraints;
 use Neos\ContentRepository\Core\Projection\Workspace\Workspace;
+use Neos\ContentRepository\Core\SharedModel\Node\NodeAddress;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateId;
 use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
 use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
@@ -115,7 +116,7 @@ class TaxonomyService
                 $this->getRootNodeTypeName()
             )
         );
-        $commandResult->block();
+        $commandResult;
 
         $rootNode = $subgraph->findRootNodeByType($this->getRootNodeTypeName());
         if ($rootNode instanceof Node) {
@@ -190,7 +191,7 @@ class TaxonomyService
         );
         usort(
             $children,
-            fn(Subtree $a, Subtree $b) => $a->node->nodeName?->value <=> $b->node->nodeName?->value
+            fn(Subtree $a, Subtree $b) => $a->node->name?->value <=> $b->node->name?->value
         );
         return new Subtree(
             $subtree->level,
@@ -202,12 +203,12 @@ class TaxonomyService
     public function getNodeByNodeAddress(string $serializedNodeAddress): Node
     {
         $contentRepository = $this->getContentRepository();
-        $nodeAddress = NodeAddressFactory::create($contentRepository)->createFromUriString($serializedNodeAddress);
+        $nodeAddress = NodeAddress::fromJsonString($serializedNodeAddress);
         $subgraph = $contentRepository->getContentGraph(WorkspaceName::forLive())->getSubgraph(
             $nodeAddress->dimensionSpacePoint,
             VisibilityConstraints::withoutRestrictions()
         );
-        $node = $subgraph->findNodeById($nodeAddress->nodeAggregateId);
+        $node = $subgraph->findNodeById($nodeAddress->aggregateId);
         if (is_null($node)) {
             throw new \InvalidArgumentException('nodeAddress does not resolve to a node');
         }

@@ -17,6 +17,7 @@ namespace Sitegeist\Taxonomy\Controller;
 
 use Neos\ContentRepository\Core\Projection\ContentGraph\AbsoluteNodePath;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Subtree;
+use Neos\Neos\Domain\NodeLabel\NodeLabelGeneratorInterface;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Mvc\Controller\ActionController;
 use Neos\Flow\Mvc\View\JsonView;
@@ -33,6 +34,9 @@ class SecondaryInspectorController extends ActionController
      * @Flow\Inject
      */
     protected $taxonomyService;
+
+    #[Flow\Inject]
+    protected NodeLabelGeneratorInterface $nodeLabelGenerator;
 
     /**
      * @var string[]
@@ -66,8 +70,8 @@ class SecondaryInspectorController extends ActionController
      */
     protected function toJson(Subtree $subtree, string $pathSoFar = null): array
     {
-        $label = $subtree->node->getLabel();
-        $pathSegment = $subtree->node->nodeName?->value ?? $label;
+        $label = $this->nodeLabelGenerator->getLabel($subtree->node);
+        $pathSegment = $subtree->node->name?->value ?? $label;
         $path = $pathSoFar ? $pathSoFar . ' - ' . $pathSegment : $pathSegment;
         $identifier = $subtree->node->aggregateId;
         $nodeType =  $subtree->node->nodeTypeName->value;

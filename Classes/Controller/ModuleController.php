@@ -38,6 +38,7 @@ use Neos\Neos\Domain\Service\WorkspaceNameBuilder;
 use Neos\Neos\FrontendRouting\NodeAddressFactory;
 use Neos\Neos\Fusion\Helper\DimensionHelper;
 use Neos\Neos\Fusion\Helper\NodeHelper;
+use Neos\Neos\Domain\NodeLabel\NodeLabelGeneratorInterface;
 use Sitegeist\Taxonomy\Service\TaxonomyService;
 use Neos\Utility\Arrays;
 
@@ -71,6 +72,9 @@ class ModuleController extends ActionController
 
     #[Flow\Inject(lazy: false)]
     protected SecurityContext $securityContext;
+
+    #[Flow\Inject]
+    protected NodeLabelGeneratorInterface $nodeLabelGenerator;
 
     protected ContentRepository $contentRepository;
 
@@ -188,7 +192,7 @@ class ModuleController extends ActionController
                 PropertyValuesToWrite::fromArray($properties)
             )
         );
-        $commandResult->block();
+        $commandResult;
 
         // create required generalizations
         foreach ($generalizations as $dimensionSpacePoint) {
@@ -213,7 +217,7 @@ class ModuleController extends ActionController
 
         if ($newVocabularyNode) {
             $this->addFlashMessage(
-                sprintf('Created vocabulary %s', $newVocabularyNode->getLabel()),
+                sprintf('Created vocabulary %s', $this->nodeLabelGenerator->getLabel($newVocabularyNode)),
                 'Create Vocabulary'
             );
         }
@@ -262,7 +266,7 @@ class ModuleController extends ActionController
             )
         );
 
-        if ($name != $vocabularyNode->nodeName?->value) {
+        if ($name != $vocabularyNode->name?->value) {
             $commandResult = $this->contentRepository->handle(
                 ChangeNodeAggregateName::create(
                     $liveWorkspace->workspaceName,
@@ -272,14 +276,14 @@ class ModuleController extends ActionController
             );
         }
 
-        $commandResult->block();
+        $commandResult;
         $this->rebaseCurrentUserWorkspace();
 
         $updatedVocabularyNode = $subgraph->findNodeById($vocabularyNode->aggregateId);
 
         if ($updatedVocabularyNode) {
             $this->addFlashMessage(
-                sprintf('Updated vocabulary %s', $updatedVocabularyNode->getLabel())
+                sprintf('Updated vocabulary %s', $this->nodeLabelGenerator->getLabel($updatedVocabularyNode))
             );
         }
 
@@ -304,11 +308,11 @@ class ModuleController extends ActionController
                 NodeVariantSelectionStrategy::STRATEGY_ALL_VARIANTS
             )
         );
-        $commandResult->block();
+        $commandResult;
         $this->rebaseCurrentUserWorkspace();
 
         $this->addFlashMessage(
-            sprintf('Deleted vocabulary %s', $vocabularyNode->getLabel())
+            sprintf('Deleted vocabulary %s', $this->nodeLabelGenerator->getLabel($vocabularyNode))
         );
 
         $this->redirect('index', null, null, ['rootNodeAddress' => $this->nodeAddressFactory->createFromNode($rootNode)]);
@@ -370,7 +374,7 @@ class ModuleController extends ActionController
                 PropertyValuesToWrite::fromArray($properties)
             )
         );
-        $commandResult->block();
+        $commandResult;
 
         // create required generalizations
         foreach ($generalizations as $dimensionSpacePoint) {
@@ -394,7 +398,7 @@ class ModuleController extends ActionController
 
         if ($newTaxonomyNode) {
             $this->addFlashMessage(
-                sprintf('Created taxonomy %s', $newTaxonomyNode->getLabel()),
+                sprintf('Created taxonomy %s', $this->nodeLabelGenerator->getLabel($newTaxonomyNode)),
                 'Create taxomony'
             );
         }
@@ -439,7 +443,7 @@ class ModuleController extends ActionController
                 PropertyValuesToWrite::fromArray($properties)
             )
         );
-        if ($name != $taxonomyNode->nodeName?->value) {
+        if ($name != $taxonomyNode->name?->value) {
             $commandResult = $this->contentRepository->handle(
                 ChangeNodeAggregateName::create(
                     $liveWorkspace->workspaceName,
@@ -448,14 +452,14 @@ class ModuleController extends ActionController
                 )
             );
         }
-        $commandResult->block();
+        $commandResult;
         $this->rebaseCurrentUserWorkspace();
 
         $updatedTaxonomyNode = $subgraph->findNodeById($vocabularyNode->aggregateId);
 
         if ($updatedTaxonomyNode) {
             $this->addFlashMessage(
-                sprintf('Updated taxonomy %s', $updatedTaxonomyNode->getLabel())
+                sprintf('Updated taxonomy %s', $this->nodeLabelGenerator->getLabel($updatedTaxonomyNode))
             );
         }
 
@@ -479,11 +483,11 @@ class ModuleController extends ActionController
                 NodeVariantSelectionStrategy::STRATEGY_ALL_VARIANTS
             )
         );
-        $commandResult->block();
+        $commandResult;
         $this->rebaseCurrentUserWorkspace();
 
         $this->addFlashMessage(
-            sprintf('Deleted taxonomy %s', $taxonomyNode->getLabel())
+            sprintf('Deleted taxonomy %s', $this->nodeLabelGenerator->getLabel($taxonomyNode))
         );
 
         $this->redirect('vocabulary', null, null, ['vocabularyNodeAddress' => $this->nodeAddressFactory->createFromNode($vocabularyNode)]);
