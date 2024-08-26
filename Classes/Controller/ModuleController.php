@@ -35,11 +35,11 @@ use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Security\Context as SecurityContext;
 use Neos\Fusion\View\FusionView;
 use Neos\Neos\Domain\Service\WorkspaceNameBuilder;
-use Neos\Neos\FrontendRouting\NodeAddressFactory;
 use Neos\Neos\Fusion\Helper\DimensionHelper;
 use Neos\Neos\Fusion\Helper\NodeHelper;
 use Neos\Neos\Domain\NodeLabel\NodeLabelGeneratorInterface;
 use Sitegeist\Taxonomy\Service\TaxonomyService;
+use Neos\ContentRepository\Core\SharedModel\Node\NodeAddress;
 use Neos\Utility\Arrays;
 
 /**
@@ -78,12 +78,10 @@ class ModuleController extends ActionController
 
     protected ContentRepository $contentRepository;
 
-    protected NodeAddressFactory $nodeAddressFactory;
 
     public function initializeObject(): void
     {
         $this->contentRepository = $this->taxonomyService->getContentRepository();
-        $this->nodeAddressFactory = NodeAddressFactory::create($this->contentRepository);
     }
 
     public function initializeView(ViewInterface $view): void
@@ -111,7 +109,7 @@ class ModuleController extends ActionController
         $vocabularies = $this->taxonomyService->findAllVocabularies($subgraph);
 
         $this->view->assign('rootNode', $rootNode);
-        $this->view->assign('rootNodeAddress', $this->nodeAddressFactory->createFromNode($rootNode)->serializeForUri());
+        $this->view->assign('rootNodeAddress', NodeAddress::fromNode($rootNode)->toJson());
         $this->view->assign('vocabularies', $vocabularies);
     }
 
@@ -174,7 +172,8 @@ class ModuleController extends ActionController
         $subgraph = $this->taxonomyService->getSubgraphForNode($rootNode);
         $liveWorkspace = $this->taxonomyService->getLiveWorkspace();
         $generalizations = $contentRepository->getVariationGraph()->getRootGeneralizations();
-        $nodeAddress = $this->nodeAddressFactory->createFromUriString($rootNodeAddress);
+        $nodeAddress = NodeAddress::fromJsonString($rootNodeAddress);
+
         $originDimensionSpacePoint = OriginDimensionSpacePoint::fromDimensionSpacePoint($nodeAddress->dimensionSpacePoint);
 
         // create node
@@ -287,7 +286,7 @@ class ModuleController extends ActionController
             );
         }
 
-        $this->redirect('index', null, null, ['rootNodeAddress' => $this->nodeAddressFactory->createFromNode($rootNode)]);
+        $this->redirect('index', null, null, ['rootNodeAddress' => NodeAddress::fromNode($rootNode)]);
     }
 
     /**
@@ -315,7 +314,7 @@ class ModuleController extends ActionController
             sprintf('Deleted vocabulary %s', $this->nodeLabelGenerator->getLabel($vocabularyNode))
         );
 
-        $this->redirect('index', null, null, ['rootNodeAddress' => $this->nodeAddressFactory->createFromNode($rootNode)]);
+        $this->redirect('index', null, null, ['rootNodeAddress' => NodeAddress::fromNode($rootNode)]);
     }
 
     /**
@@ -356,7 +355,7 @@ class ModuleController extends ActionController
         $liveWorkspace = $this->taxonomyService->getLiveWorkspace();
 
         $generalizations = $this->contentRepository->getVariationGraph()->getRootGeneralizations();
-        $nodeAddress = $this->nodeAddressFactory->createFromUriString($parentNodeAddress);
+        $nodeAddress = NodeAddress::fromJsonString($parentNodeAddress);
         $originDimensionSpacePoint = OriginDimensionSpacePoint::fromDimensionSpacePoint($nodeAddress->dimensionSpacePoint);
 
         // create node
@@ -370,7 +369,6 @@ class ModuleController extends ActionController
                 $originDimensionSpacePoint,
                 $parentNode->aggregateId,
                 null,
-                NodeName::transliterateFromString($name),
                 PropertyValuesToWrite::fromArray($properties)
             )
         );
@@ -383,7 +381,7 @@ class ModuleController extends ActionController
                 continue;
             }
 
-            $commandResult = $this->contentRepository->handle(
+           $this->contentRepository->handle(
                 CreateNodeVariant::create(
                     $liveWorkspace->workspaceName,
                     $nodeAggregateId,
@@ -407,7 +405,7 @@ class ModuleController extends ActionController
             'vocabulary',
             null,
             null,
-            ['vocabularyNodeAddress' => $this->nodeAddressFactory->createFromNode($vocabularyNode)]
+            ['vocabularyNodeAddress' => NodeAddress::fromNode($vocabularyNode)]
         );
     }
 
@@ -463,7 +461,7 @@ class ModuleController extends ActionController
             );
         }
 
-        $this->redirect('vocabulary', null, null, ['vocabularyNodeAddress' => $this->nodeAddressFactory->createFromNode($vocabularyNode)]);
+        $this->redirect('vocabulary', null, null, ['vocabularyNodeAddress' => NodeAddress::fromNode($vocabularyNode)]);
     }
 
     /**
@@ -490,7 +488,7 @@ class ModuleController extends ActionController
             sprintf('Deleted taxonomy %s', $this->nodeLabelGenerator->getLabel($taxonomyNode))
         );
 
-        $this->redirect('vocabulary', null, null, ['vocabularyNodeAddress' => $this->nodeAddressFactory->createFromNode($vocabularyNode)]);
+        $this->redirect('vocabulary', null, null, ['vocabularyNodeAddress' => NodeAddress::fromNode($vocabularyNode)]);
     }
 
     protected function rebaseCurrentUserWorkspace(): void
