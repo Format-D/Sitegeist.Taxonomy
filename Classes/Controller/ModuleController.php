@@ -234,8 +234,8 @@ class ModuleController extends ActionController
         $vocabularyNode = $this->taxonomyService->getNodeByNodeAddress($vocabularyNodeAddress);
 
         $subgraph = $contentRepository->getContentGraph($liveWorkspace->workspaceName)->getSubgraph(
-            $vocabularyNode->subgraphIdentity->dimensionSpacePoint,
-            $vocabularyNode->subgraphIdentity->visibilityConstraints
+            $vocabularyNode->dimensionSpacePoint,
+            $vocabularyNode->visibilityConstraints
         );
 
         $rootNode = $this->taxonomyService->findOrCreateRoot($subgraph);
