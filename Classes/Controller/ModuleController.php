@@ -187,7 +187,6 @@ class ModuleController extends ActionController
                 $originDimensionSpacePoint,
                 $rootNode->aggregateId,
                 null,
-                NodeName::transliterateFromString($name),
                 PropertyValuesToWrite::fromArray($properties)
             )
         );
