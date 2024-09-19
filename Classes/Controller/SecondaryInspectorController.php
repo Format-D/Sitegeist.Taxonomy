@@ -22,6 +22,8 @@ use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Mvc\Controller\ActionController;
 use Neos\Flow\Mvc\View\JsonView;
 use Sitegeist\Taxonomy\Service\TaxonomyService;
+use Neos\Neos\Ui\ContentRepository\Service\NeosUiNodeService;
+use Neos\Neos\FrontendRouting\SiteDetection\SiteDetectionResult;
 
 /**
  * Class SecondaryInspectorController
@@ -38,6 +40,9 @@ class SecondaryInspectorController extends ActionController
     #[Flow\Inject]
     protected NodeLabelGeneratorInterface $nodeLabelGenerator;
 
+    #[Flow\Inject]
+    protected NeosUiNodeService $nodeService;
+
     /**
      * @var string[]
      */
@@ -50,7 +55,8 @@ class SecondaryInspectorController extends ActionController
 
     public function treeAction(string $contextNode, string $startingPoint): void
     {
-        $node = $this->taxonomyService->getNodeByNodeAddress($contextNode);
+        $contentRepositoryId = SiteDetectionResult::fromRequest($this->request->getHttpRequest())->contentRepositoryId;
+        $node = $this->nodeService->findNodeBySerializedNodeAddress($contextNode, $contentRepositoryId);
         $subgraph =  $this->taxonomyService->getSubgraphForNode($node);
 
         $path = AbsoluteNodePath::fromString($startingPoint);
