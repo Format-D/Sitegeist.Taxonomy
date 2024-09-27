@@ -12,6 +12,7 @@ prototype(Sitegeist.Taxonomy:Views.Module.Vocabulary.List) < prototype(Neos.Fusi
                         targetAction='index'
                         targetProperty='rootNodeAddress'
                         contextNode={rootNode}
+                        contentRepositoryId={contentRepositoryId}
                     />
                 </div>
             </legend>

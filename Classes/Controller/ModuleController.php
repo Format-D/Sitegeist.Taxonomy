@@ -40,6 +40,7 @@ use Neos\Neos\Fusion\Helper\NodeHelper;
 use Neos\Neos\Domain\NodeLabel\NodeLabelGeneratorInterface;
 use Sitegeist\Taxonomy\Service\TaxonomyService;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeAddress;
+use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryId;
 use Neos\Utility\Arrays;
 
 /**
@@ -108,6 +109,7 @@ class ModuleController extends ActionController
 
         $vocabularies = $this->taxonomyService->findAllVocabularies($subgraph);
 
+        $this->view->assign('contentRepositoryId', ContentRepositoryId::fromString('default'));
         $this->view->assign('rootNode', $rootNode);
         $this->view->assign('rootNodeAddress', NodeAddress::fromNode($rootNode)->toJson());
         $this->view->assign('vocabularies', $vocabularies);
@@ -145,6 +147,7 @@ class ModuleController extends ActionController
         $rootNode = $this->taxonomyService->findOrCreateRoot($subgraph);
         $vocabularySubtree = $this->taxonomyService->findSubtree($vocabularyNode);
 
+        $this->view->assign('contentRepositoryId', ContentRepositoryId::fromString('default'));
         $this->view->assign('rootNode', $rootNode);
         $this->view->assign('vocabularyNode', $vocabularyNode);
         $this->view->assign('vocabularySubtree', $vocabularySubtree);

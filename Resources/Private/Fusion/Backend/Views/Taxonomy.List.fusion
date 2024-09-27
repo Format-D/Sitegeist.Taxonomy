@@ -13,6 +13,7 @@ prototype(Sitegeist.Taxonomy:Views.Module.Taxonomy.List) < prototype(Neos.Fusion
                         targetAction='vocabulary'
                         targetProperty='vocabularyNodeAddress'
                         contextNode={vocabularyNode}
+                        contentRepositoryId={contentRepositoryId}
                     />
                 </div>
             </legend>
