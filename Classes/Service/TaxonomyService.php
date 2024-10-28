@@ -237,7 +237,7 @@ class TaxonomyService
 
     public function getLiveWorkspace(): Workspace
     {
-        $liveWorkspace = $this->getContentRepository()->getWorkspaceFinder()->findOneByName(WorkspaceName::forLive());
+        $liveWorkspace = $this->getContentRepository()->findWorkspaceByName(WorkspaceName::forLive());
         if (!$liveWorkspace) {
             throw new \Exception('live workspace could not be found');
         }

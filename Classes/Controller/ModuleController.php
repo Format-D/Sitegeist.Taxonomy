@@ -26,6 +26,7 @@ use Neos\ContentRepository\Core\Feature\NodeVariation\Command\CreateNodeVariant;
 use Neos\ContentRepository\Core\Feature\WorkspaceRebase\Command\RebaseWorkspace;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Neos\ContentRepository\Core\Projection\Workspace\Workspace;
+use Neos\ContentRepository\Core\SharedModel\Workspace\WorkspaceName;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeAggregateId;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeName;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeVariantSelectionStrategy;
@@ -34,13 +35,15 @@ use Neos\Flow\Mvc\Controller\ActionController;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Security\Context as SecurityContext;
 use Neos\Fusion\View\FusionView;
-use Neos\Neos\Domain\Service\WorkspaceNameBuilder;
+use Neos\Neos\Domain\Service\WorkspaceService;
+use Neos\Neos\Service\UserService;
 use Neos\Neos\Fusion\Helper\DimensionHelper;
 use Neos\Neos\Fusion\Helper\NodeHelper;
 use Neos\Neos\Domain\NodeLabel\NodeLabelGeneratorInterface;
 use Sitegeist\Taxonomy\Service\TaxonomyService;
 use Neos\ContentRepository\Core\SharedModel\Node\NodeAddress;
 use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryId;
+use Neos\Neos\FrontendRouting\SiteDetection\SiteDetectionResult;
 use Neos\Utility\Arrays;
 
 /**
@@ -79,6 +82,11 @@ class ModuleController extends ActionController
 
     protected ContentRepository $contentRepository;
 
+    #[Flow\Inject]
+	protected WorkspaceService $workspaceService;
+
+    #[Flow\Inject]
+    protected UserService $userService;
 
     public function initializeObject(): void
     {
@@ -495,17 +503,13 @@ class ModuleController extends ActionController
 
     protected function rebaseCurrentUserWorkspace(): void
     {
-        $account = $this->securityContext->getAccount();
-        if (is_null($account)) {
-            throw new \Exception('no account found');
-        }
-        $workspaceName = WorkspaceNameBuilder::fromAccountIdentifier(
-            $account->getAccountIdentifier()
-        );
-        $workspace = $this->contentRepository->getWorkspaceFinder()->findOneByName($workspaceName);
+        $contentRepositoryId = SiteDetectionResult::fromRequest($this->request->getHttpRequest())->contentRepositoryId;
+        $user = $this->userService->getBackendUser();
+        $workspace = $this->workspaceService->getPersonalWorkspaceForUser($contentRepositoryId, $user->getId());
+
         if (is_null($workspace)) {
             throw new \Exception('no workspace found');
         }
-        $this->contentRepository->handle(RebaseWorkspace::create($workspaceName));
+        $this->contentRepository->handle(RebaseWorkspace::create(WorkspaceName::fromString($workspace->workspaceName->value)));
     }
 }
