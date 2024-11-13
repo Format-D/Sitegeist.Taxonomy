@@ -37,7 +37,7 @@ prototype(Sitegeist.Taxonomy:Views.Module.Vocabulary.List) < prototype(Neos.Fusi
                                 <i class="fas fa-tags neos-pull-left"></i>
                                 <h3>
                                     <Neos.Fusion:Link.Action href.action="vocabulary" href.arguments.vocabularyNodeAddress={Neos.Node.serializedNodeAddress(vocabulary)} title={props.i18n.id('vocabulary.show')}>
-                                        {vocabulary.properties.title} [{vocabulary.name}]
+                                        {vocabulary.properties.title} [{vocabulary.name.value}]
                                     </Neos.Fusion:Link.Action>
                                 </h3>
                             </div>
@@ -60,7 +60,7 @@ prototype(Sitegeist.Taxonomy:Views.Module.Vocabulary.List) < prototype(Neos.Fusi
 
                                     <Neos.Fusion:Fragment @if={vocabulary.classification.value != 'tethered'} >
                                         &nbsp;
-                                        <button class="neos-button neos-button-danger" title={props.i18n.id('generic.delete')} data-toggle="modal" href={'#deleteVocabulary_' + vocabulary.aggregateId} data-neos-toggle="tooltip">
+                                        <button class="neos-button neos-button-danger" title={props.i18n.id('generic.delete')} data-toggle="modal" href={'#deleteVocabulary_' + q(vocabulary).id()} data-neos-toggle="tooltip">
                                             <i class="fas fa-trash-alt icon-white"></i>
                                         </button>
                                     </Neos.Fusion:Fragment>
@@ -70,7 +70,7 @@ prototype(Sitegeist.Taxonomy:Views.Module.Vocabulary.List) < prototype(Neos.Fusi
                             </div>
 
                             <Neos.Fusion:Fragment @if={vocabulary.classification.value != 'tethered'} >
-                                <div class="neos-hide" id={'deleteVocabulary_' + vocabulary.aggregateId}>
+                                <div class="neos-hide" id={'deleteVocabulary_' + q(vocabulary).id()}>
                                     <div class="neos-modal-centered">
                                         <div class="neos-modal-content">
                                             <div class="neos-modal-header">
